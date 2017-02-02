@@ -7,6 +7,8 @@ import numpy as np
 import cv2
 import glob
 
+import jsonpickle
+
 import pandas as pd
 
 from pprint import pprint
@@ -61,22 +63,24 @@ pipeline = Pipeline([
     ('clf', SVC()),
 ])
 
-# uncommenting more parameters will give better exploring power but will
-# increase processing time in a combinatorial way
-parameters = {
-    'hog__orientations': 11,
-    'hog__pixels_per_cell': 12,
-    'hog__cells_per_block': 1,
-    'clf__C': 10,
-    'clf__gamma': 0.001,
-    'clf__kernel': 'rbf'
-}
+X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.95, random_state=42)
 
-X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.05, random_state=42)
-
-classifier = pipeline.fit(X_train, y_train)
+classifier = pipeline.set_params(hog__orientations=11,
+                                 hog__pixels_per_cell=12,	
+                                 hog__cells_per_block=1,
+                                 clf__C=10,
+                                 clf__gamma=0.001,
+                                 clf__kernel='rbf').fit(X_train, y_train)
 
 y_pred = pipeline.predict(X_test)
-print("Train score: %0.3f" % accuracy_score(y_pred, y_test))
+print("Test score: %0.3f" % accuracy_score(y_pred, y_test))
 
-joblib.dump(classifier, 'svm_classifier.pkl')
+
+print(pipeline.named_steps['clf'])
+joblib.dump(pipeline.named_steps['clf'], 'classifier.pkl') 
+
+#vec_repr = jsonpickle.encode(classifier)
+#print(vec_repr)
+
+#with open('classifier.json', 'w') as f: 
+#    f.write(vec_repr) 
