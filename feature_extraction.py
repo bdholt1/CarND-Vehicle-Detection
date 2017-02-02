@@ -40,5 +40,5 @@ class HOGFeaturiser(BaseEstimator, TransformerMixin):
             			   self.cells_per_block, vis=False, feature_vec=True)
             features.append(vec)
         arr = np.array(features)
-        print("shape of HOG features = ", arr.shape)
+        #print("shape of HOG features = ", arr.shape)
         return arr

@@ -63,10 +63,7 @@ def slide_window(img, clf, x_start_stop=[None, None], y_start_stop=[None, None],
             # Append window position to list
             test_img = cv2.resize(gray[starty:endy, startx:endx], (64, 64))
             
-            cv2.imshow('window', test_img)
-            cv2.waitKey(1000)
-            
-            if clf.predict(test_img):
+            if clf.predict([test_img]):
                 window_list.append(((startx, starty), (endx, endy)))
                 
     # Return the list of windows
@@ -124,24 +121,8 @@ def multiscale_slide_window(image, clf):
     
 if __name__ == "__main__":
 
-    classifier_svm = joblib.load('classifier.pkl')
-    pipeline = Pipeline([
-        ('hog', HOGFeaturiser()),
-        ('scaler', StandardScaler()),
-        ('clf', classifier_svm),
-    ])
-
-    
-    classifier = pipeline.set_params(hog__orientations=11,
-                                     hog__pixels_per_cell=12,	
-                                     hog__cells_per_block=1,
-                                     clf__C=10,
-                                     clf__gamma=0.001,
-                                     clf__kernel='rbf')
-
-
-    
-    print(classifier)
+    pipeline = joblib.load('classifier.pkl')
+    print(pipeline)
 
     #with open('classifier.json', 'r') as f: 
     #   vec_repr = f.read()
@@ -154,7 +135,7 @@ if __name__ == "__main__":
         image = mpimg.imread(f)
         image = image.astype(np.float32)/255 # JPEGs are loaded at 0..255
         
-        windows, window_image = multiscale_slide_window(image, classifier)
+        windows, window_image = multiscale_slide_window(image, pipeline)
         
         # Plot the examples
         fig = plt.figure()

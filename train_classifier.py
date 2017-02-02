@@ -63,7 +63,7 @@ pipeline = Pipeline([
     ('clf', SVC()),
 ])
 
-X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.95, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.05, random_state=42)
 
 classifier = pipeline.set_params(hog__orientations=11,
                                  hog__pixels_per_cell=12,	
@@ -77,10 +77,12 @@ print("Test score: %0.3f" % accuracy_score(y_pred, y_test))
 
 
 print(pipeline.named_steps['clf'])
-joblib.dump(pipeline.named_steps['clf'], 'classifier.pkl') 
+joblib.dump(pipeline, 'classifier.pkl') 
 
-#vec_repr = jsonpickle.encode(classifier)
-#print(vec_repr)
+clf2 = joblib.load('classifier.pkl')
+print(clf2)
+y_pred = clf2.predict(X_test)
+print("Test score: %0.3f" % accuracy_score(y_pred, y_test))
 
 #with open('classifier.json', 'w') as f: 
 #    f.write(vec_repr) 
