@@ -114,19 +114,23 @@ I decided to search at 5 different scales, from 400x400 at the largest, through 
 on the prior probability of seeing a vehicle in that location at the given scale. I took special care to reduce the overlap at smaller windows so that the total number of windows to
 classify remained manageable (a maximum of low hundreds).
 
-Here are some examples of the sliding windows.
+Here are some examples of the sliding windows, using colors to differentiate them: red=400x400, yellow=300x300, cyan=200x200, purple=100x100 and green=50x50.
 
-![400x400][sliding_window_400x400.png]
-![300x300][sliding_window_300x300.png]
-![200x200][sliding_window_200x200.png]
-![100x100][sliding_window_100x100.png]
-![50x50][sliding_window_50x50.png]
+![sliding windows][sliding_windows.png]
 
-####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to try to minimize false positives and reliably detect cars?
 
-Applying my pipeline to these sliding windows resulted in good detections with very few false positives. Here are some example images:
+####2. Example detections
 
-![alt text][image4]
+Applying my pipeline to these sliding windows resulted in good detections with very few false positives. In fact, it detected some cars in the oncoming lane that I struggled to detect. Here are some example images:
+
+![sliding window detections][sliding_window_classifier_test_images.png]
+
+####2. Example labelling
+
+The next step was to do hough voting into an accumulator for each of the detections and find the peaks.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the accumulator.
+
+![labels][accumulator_labelling.png]
+
 ---
 
 ### Video Implementation
@@ -137,7 +141,7 @@ Here's a [link to my video result](./project_video.mp4)
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
-I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
+I recorded the positions of positive detections in each frame of the video.  From the positive detections I created a heatmap and then thresholded that map to identify vehicle positions.  .  I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.  
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 

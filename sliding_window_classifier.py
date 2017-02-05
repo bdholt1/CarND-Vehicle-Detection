@@ -77,73 +77,112 @@ def draw_boxes(img, bboxes, color=(0, 0, 255), thick=6):
         cv2.rectangle(img, bbox[0], bbox[1], color, thick)
     # Return the image copy with boxes drawn
     #return imcopy
-    
+
+def vote(accumulator, boxes):
+    # Iterate through list of boxes
+    for box in boxes:
+        # Add += 1 for all pixels inside each bbox
+        # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+        accumulator[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+
+    # Return updated heatmap
+    return accumulator
+
 def multiscale_slide_window(image, clf):
     """
     Slide a window over the image at different scales.
     
     """
     
-    window_image = np.copy(image)    
+    window_image = np.copy(image)
+    accumulator = np.zeros(image.shape[0:2])
     windows = []
     
     w = slide_window(image, clf, x_start_stop=[None, None], y_start_stop=[319, None], 
                         xy_window=(400, 400), xy_overlap=(0.9, 0.9))
     draw_boxes(window_image, w, color=(255, 0, 0), thick=6)
+    vote(accumulator, w)
     windows.append(w)
     print("400x400 bounding boxes: ", len(w))
     
     w = slide_window(image, clf, x_start_stop=[20, 1260], y_start_stop=[339, 680], 
                         xy_window=(300, 300), xy_overlap=(0.9, 0.9))
     draw_boxes(window_image, w, color=(255, 255, 0), thick=6)
+    vote(accumulator, w)
     windows.append(w)
     print("300x300 bounding boxes: ", len(w))    
     
     w = slide_window(image, clf, x_start_stop=[50, 1230], y_start_stop=[359, 640], 
                         xy_window=(200, 200), xy_overlap=(0.9, 0.9))
     draw_boxes(window_image, w, color=(0, 255, 255), thick=6)
+    vote(accumulator, w)
     windows.append(w)
     print("200x200 bounding boxes: ", len(w))     
     
     w = slide_window(image, clf, x_start_stop=[100, 1180], y_start_stop=[379, 620], 
                         xy_window=(100, 100), xy_overlap=(0.8, 0.8))
     draw_boxes(window_image, w, color=(255, 0, 255), thick=6)
+    vote(accumulator, w)
     windows.append(w)
     print("100x100 bounding boxes: ", len(w)) 
     
     w = slide_window(image, clf, x_start_stop=[250, 1030], y_start_stop=[379, 600], 
                         xy_window=(50, 50), xy_overlap=(0.6, 0.6))
     draw_boxes(window_image, w, color=(0, 255, 0), thick=6)
+    vote(accumulator, w)
     windows.append(w)
     print("50x50 bounding boxes: ", len(w)) 
     
-    return windows, window_image
+    return windows, window_image, accumulator
+
+def label_detections(accumulator, threshold):
+    accumulator_thresh = np.copy(accumulator)
+    accumulator_thresh[accumulator <= threshold] = 0
     
+    from scipy.ndimage.measurements import label
+    labels = label(accumulator_thresh)
+    
+    return labels
+
+def draw_labeled_bboxes(image, labels):
+    labels_image = np.copy(image)
+    # Iterate through all detected cars
+    for car_number in range(1, labels[1]+1):
+        # Find pixels with each car_number label value
+        nonzero = (labels[0] == car_number).nonzero()
+        # Identify x and y values of those pixels
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        # Define a bounding box based on min/max x and y
+        bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+        # Draw the box on the image
+        cv2.rectangle(labels_image, bbox[0], bbox[1], (0,0,255), 6)
+    # Return the image
+    return labels_image
+
 if __name__ == "__main__":
 
     pipeline = joblib.load('classifier.pkl')
     print(pipeline)
 
-    #with open('classifier.json', 'r') as f: 
-    #   vec_repr = f.read()
-    #    print(vec_repr)
-    #    classifier = jsonpickle.decode(vec_repr)
-    
-    image_files = glob.glob('./test_images/*.jpg')
+    image_files = glob.glob('./test_images/test*.jpg')
 
-    for f in image_files:
-        image = mpimg.imread(f)
-        image = image.astype(np.float32)/255 # JPEGs are loaded at 0..255
+    fig, axes = plt.subplots(len(image_files), 4)
+
+    for f,ax in zip(image_files, axes):
+        image = cv2.imread(f)
+        rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         
-        windows, window_image = multiscale_slide_window(image, pipeline)
+        windows, window_image, accumulator = multiscale_slide_window(rgb, pipeline)
         
-        # Plot the examples
-        fig = plt.figure()
-        plt.subplot(121)
-        plt.imshow(image)
-        plt.title('Example Image')
-        plt.subplot(122)
-        plt.imshow(window_image)
-        plt.title('Detected vehicles')
-        plt.show()
-    
+        labels = label_detections(accumulator, threshold=5)
+        print(labels[1], 'cars found')
+
+        labels_image = draw_labeled_bboxes(rgb, labels)
+
+        ax[0].imshow(window_image)
+        ax[1].imshow(accumulator, cmap='hot')
+        ax[2].imshow(labels[0], cmap='gray')
+        ax[3].imshow(labels_image)
+
+    plt.show()
