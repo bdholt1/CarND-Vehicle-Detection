@@ -43,8 +43,12 @@ def visualise_data():
     # Generate a random index to look at a car image
     ind = np.random.randint(0, len(cars_files))
     # Read in the image
-    image = mpimg.imread(cars_files[ind])
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    car_image = mpimg.imread(cars_files[ind])
+
+    ind = np.random.randint(0, len(notcars_files))
+    notcar_image = mpimg.imread(notcars_files[ind])
+
+    gray = cv2.cvtColor(car_image, cv2.COLOR_RGB2GRAY)
     # Define HOG parameters
     orient = 9
     pix_per_cell = 8
@@ -57,11 +61,21 @@ def visualise_data():
     # Plot the examples
     fig = plt.figure()
     plt.subplot(121)
-    plt.imshow(image, cmap='gray')
+    plt.imshow(car_image, cmap='gray')
     plt.title('Example Car Image')
     plt.subplot(122)
     plt.imshow(hog_image, cmap='gray')
     plt.title('HOG Visualization')
+    plt.show()
+
+    # Plot the examples
+    fig = plt.figure()
+    plt.subplot(121)
+    plt.imshow(car_image)
+    plt.title('Example Vehicle')
+    plt.subplot(122)
+    plt.imshow(notcar_image)
+    plt.title('Example non-Vehicle')
     plt.show()
 
 
