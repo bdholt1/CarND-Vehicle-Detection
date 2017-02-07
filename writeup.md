@@ -17,9 +17,15 @@ The goals / steps of this project are the following:
 [image3]: ./sliding_windows.png
 [image4]: ./sliding_window_classifier_test_images.png
 [image5]: ./accumulator_labelling.png
-[image6]: ./video_accumulator.png
-[image7]: ./video_labels.png
-[image7]: ./video_boxes.png
+[image6]: ./video_images/video_401.png
+[image7]: ./video_images/video_402.png
+[image8]: ./video_images/video_403.png
+[image9]: ./video_images/video_404.png
+[image10]: ./video_images/video_405.png
+[image11]: ./video_images/video_406.png
+[image12]: ./video_images/video_406_labels.png
+[image13]: ./video_images/video_406_detections.png
+
 
 
 ###Writeup / README
@@ -139,13 +145,18 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 #### Here are six frames and their corresponding accumulator images:
 
-![accumulators][image6]
+![frame 401][image6]
+![frame 402][image7]
+![frame 403][image8]
+![frame 404][image9]
+![frame 405][image10]
+![frame 406][image11]
 
 #### Here is the output of `scipy.ndimage.measurements.label()` on the integrated accumulator from all six frames:
-![labels][image7]
+![labels][image12]
 
 #### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![bounding boxes][image8]
+![bounding boxes][image13]
 
 
 
