@@ -6,8 +6,6 @@ import numpy as np
 import cv2
 import glob
 
-import jsonpickle
-
 from time import time
 
 from sklearn.externals import joblib
@@ -17,14 +15,14 @@ from feature_extraction import get_hog_features, HOGFeaturiser
 
 
 # Define a function that takes an image,
-# start and stop positions in both x and y, 
-# window size (x and y dimensions),  
+# start and stop positions in both x and y,
+# window size (x and y dimensions),
 # and overlap fraction (for both x and y)
-def slide_window(img, clf, x_start_stop=[None, None], y_start_stop=[None, None], 
+def slide_window(img, clf, x_start_stop=[None, None], y_start_stop=[None, None],
                     xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
-                    
+
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    
+
     # If x and/or y start/stop positions not defined, set to image size
     if x_start_stop[0] == None:
         x_start_stop[0] = 0
@@ -34,7 +32,7 @@ def slide_window(img, clf, x_start_stop=[None, None], y_start_stop=[None, None],
         y_start_stop[0] = 0
     if y_start_stop[1] == None:
         y_start_stop[1] = img.shape[0]
-    # Compute the span of the region to be searched    
+    # Compute the span of the region to be searched
     xspan = x_start_stop[1] - x_start_stop[0]
     yspan = y_start_stop[1] - y_start_stop[0]
     print("xspan = ", xspan, " yspan = ", yspan)
@@ -160,6 +158,32 @@ def draw_labeled_bboxes(image, labels):
     # Return the image
     return labels_image
 
+class VehicleDetector():
+    def __init__(self, threshold=5, frames=3):
+        self.pipeline = joblib.load('classifier.pkl')
+        self.threshold = threshold
+        self.frames = frames
+        self.accumulators = []
+
+    def process(self, image):
+
+        windows, window_image, accumulator = multiscale_slide_window(image, self.pipeline)
+
+        self.accumulators.append(accumulator)
+        if len(self.accumulators) > self.frames:
+            self.accumulators.pop(0)
+
+        acc_array = np.sum(np.array(self.accumulators), axis=0)
+        #cv2.imshow('heatmap', acc_array)
+        #cv2.waitKey(1)
+
+        labels = label_detections(acc_array, threshold=self.threshold)
+        print(labels[1], 'cars found')
+
+        labels_image = draw_labeled_bboxes(image, labels)
+        return labels_image
+
+
 if __name__ == "__main__":
 
     pipeline = joblib.load('classifier.pkl')
@@ -172,9 +196,9 @@ if __name__ == "__main__":
     for f,ax in zip(image_files, axes):
         image = cv2.imread(f)
         rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        
+
         windows, window_image, accumulator = multiscale_slide_window(rgb, pipeline)
-        
+
         labels = label_detections(accumulator, threshold=5)
         print(labels[1], 'cars found')
 
