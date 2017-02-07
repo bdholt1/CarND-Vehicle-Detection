@@ -17,8 +17,9 @@ The goals / steps of this project are the following:
 [image3]: ./sliding_windows.png
 [image4]: ./sliding_window_classifier_test_images.png
 [image5]: ./accumulator_labelling.png
-[image6]: ./cumulative_voting.png
-[image7]: ./examples/output_bboxes.png
+[image6]: ./video_accumulator.png
+[image7]: ./video_labels.png
+[image7]: ./video_boxes.png
 
 
 ###Writeup / README
@@ -125,35 +126,36 @@ The next step was to do hough voting into an accumulator for each of the detecti
 
 ### Video Implementation
 
-####1. My pipeline performs reasonably well, there are some short occurances of false positives and the bounding box size jumps around a bit, bit it's clearly tracking the vehicles.
+####1. Pipeline
+My pipeline performs reasonably well, there are some short occurances of false positives and the bounding box size jumps around a bit, bit it's clearly tracking the vehicles.
 Here's a [link to my video result](./project_video_output.mp4)
 
 
-####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
+####2. Filtering false positives
 
 I recorded the positions of positive detections in each frame of the video and voted that detection into an accumulator. The most recent `N=5` accumulators are kept and summed to yield an accumulator which I thresholded (`threshold=20`) to identify vehicle positions. I then assumed each blob corresponded to a vehicle.  I constructed bounding boxes to cover the area of each blob detected.
 
 Here's an example result showing the heatmap from a series of frames of video, the result of `scipy.ndimage.measurements.label()` and the bounding boxes then overlaid on the last frame of video:
 
-### Here are six frames and their corresponding heatmaps:
+#### Here are six frames and their corresponding accumulator images:
 
-![alt text][image5]
+![accumulators][image6]
 
-### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
-![alt text][image6]
+#### Here is the output of `scipy.ndimage.measurements.label()` on the integrated accumulator from all six frames:
+![labels][image7]
 
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
+#### Here the resulting bounding boxes are drawn onto the last frame in the series:
+![bounding boxes][image8]
 
 
 
 ---
 
-###Discussion
+### Discussion
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-This was a classic implementation of the Dalal Triggs SVM+HOG detector and I decided to stick with this configuration to see where the traditional approach falls flat.  I was extremely surprised how well the SVM with RBF kernel was able to classify the HOG patches, and what was most interesting about the grid search was that it chose a low-dimensional vector (11 orientations, 12 pixels_per_cell and 1 cell per block = 275 dimensions) rather than the higher dimensional possibilities over my grid search space. Clearly the RBF SVM was able to find an effective decision boundary in a higher dimensional projection.  The downside here was that the RBF SVM is is slow to run, approximately 0.4 FPS. I did a profile using `cProfile` and found that about 60% of that was taken by the SVM classifier, 30% by computing HOG features for each patch and 10% for the rest.  I spent a bit of time trying to compute the HOG descriptor over the entire image but found it challenging to work that into the pipeline. I also tried replacing the RBF SVM with a linear SVM (and best HOG parameters of 11 orientations, 4 pixels_per_cell and 2 cells per block) but the classifier was only operating at 94% and that yielded too many false positives.
+This was a classic implementation of the Dalal Triggs SVM+HOG detector and I decided to stick with this configuration to see where the traditional approach falls flat.  I was extremely surprised how well the SVM with RBF kernel was able to classify the HOG patches, and what was most interesting about the grid search was that it chose a low-dimensional vector (11 orientations, 12 pixels_per_cell and 1 cell per block = 275 dimensions) rather than the higher dimensional possibilities over my grid search space. Clearly the RBF SVM was able to find an effective decision boundary in a higher dimensional projection.  The downside here was that the RBF SVM is is slow to run, approximately 0.4 FPS. I did a profile using `cProfile` and found that about 60% of that was taken by the SVM classifier, 30% by computing HOG features for each patch and 10% for the rest.  I spent a bit of time trying to compute the HOG descriptor over the entire image but found it challenging to work that into the pipeline. I also tried replacing the RBF SVM with a linear SVM (and best HOG parameters of 11 orientations, 4 pixels_per_cell and 2 cells per block) but the classifier was only operating at 94% and that yielded too many false positives.  One approach to solve this would be hard negative mining which I would have done if I were going to persue this project further.
 
 Another area where my detector fails is that it's unable to distinguish between 2 separate vehicles and treats them as a single detection when they are too close or occlude each other.  An approach to resolving this is to use a filter (like a Kalman filter) to track the centroid of each detection box in image coordinates.
 
