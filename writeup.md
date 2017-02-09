@@ -44,7 +44,7 @@ I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an 
 ![Data examples][image1]
 
 
-From the Dalal Triggs 2005 paper I got the sense that the color space doesn't make much difference to performance, so I focused my effort on exploring the various parameters to the HOG feature. After reading in images, I converted them to grayscale and flipped them horizontally to duplicate the dataset.
+From the Dalal Triggs 2005 paper I got the sense that the color space doesn't make much difference to performance, so I focused my effort on exploring the various parameters to the HOG feature. After reading in images, I converted them to grayscale from RGB and flipped them horizontally to duplicate the dataset.
 
 The dataset contains 17936 non-vehicle images and 17944 vehicle images.
 
@@ -157,8 +157,6 @@ Here's an example result showing the heatmap from a series of frames of video, t
 
 #### Here the resulting bounding boxes are drawn onto the last frame in the series:
 ![bounding boxes][image13]
-
-
 
 ---
 
